@@ -1,0 +1,392 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ProgressBar;
+
+namespace Demo
+{
+    public partial class Partners : Form
+    {
+        string sqlCon = "Data Source=ADCLG1;Initial Catalog=CherDemoPro;Integrated Security=True;";
+        int page = 1;
+        int countPage = 0;
+        int skip =0;
+        public Partners()
+        {
+            InitializeComponent();
+        }
+
+        private void Partners_Load(object sender, EventArgs e)
+        {
+            int countPart = CountStr();
+            if (countPart % 3 == 0)
+            {
+                countPage = countPart / 3;
+            }
+            else
+            {
+                 countPage = countPart / 3+1;
+            }
+            Partner();
+        }
+        private void Partner()
+        {
+            try
+            {
+                panel1.Visible = false;
+                panel2.Visible = false;
+                panel3.Visible = false;
+                if (page==1)
+                    button2.Enabled = false;
+                else button2.Enabled = true;
+                if (page == countPage)
+                    button1.Enabled = false;
+                else button1.Enabled = true;
+ 
+                SqlConnection sqlConnection = new SqlConnection(sqlCon);
+                sqlConnection.Open();
+                string sql = "select TypePartner, NamePartner, Director, Phone,Rating, id_Partner  " +
+                    " from Partners, Partner_type where Partners.id_TypePartner = Partner_type.id_TypePartner";
+                SqlCommand cmd = new SqlCommand(sql, sqlConnection);
+                SqlDataReader reader = cmd.ExecuteReader();
+                int numPanel = 0;
+                 while (reader.Read())
+                 {
+                    if (skip != 0)
+                    {
+                        skip--;
+                        continue;
+                    }
+                    if (skip == 0)
+                    {
+                        if (numPanel == 0)
+                        {
+                            label1.Text = reader[0].ToString();
+                            label3.Text = reader[1].ToString();
+                            label4.Text = Sell(reader[5].ToString());
+                            label6.Text = reader[2].ToString();
+                            label7.Text = reader[3].ToString();
+                            label9.Text = reader[4].ToString();
+                            numPanel++;
+                            panel1.Visible = true;
+                            continue;
+                        }
+                        if (numPanel == 1)
+                        {
+                            label18.Text = reader[0].ToString();
+                            label16.Text = reader[1].ToString();
+                            label15.Text = Sell(reader[5].ToString());
+                            label13.Text = reader[2].ToString();
+                            label12.Text = reader[3].ToString();
+                            label10.Text = reader[4].ToString();
+                            numPanel++;
+                            panel2.Visible = true;
+                            continue;
+                        }
+                        if (numPanel == 2)
+                        {
+                            label27.Text = reader[0].ToString();
+                            label25.Text = reader[1].ToString();
+                            label24.Text = Sell(reader[5].ToString());
+                            label22.Text = reader[2].ToString();
+                            label21.Text = reader[3].ToString();
+                            label19.Text = reader[4].ToString();
+                            numPanel++;
+                            panel3.Visible = true;
+                            continue;
+                        }
+                    }
+                }
+                sqlConnection.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        private string Sell(string count1)
+        {
+            try
+            {
+                SqlConnection sqlConnection = new SqlConnection(sqlCon);
+                sqlConnection.Open();
+                string sql = $"select sum(CountProduct) from Partner_product where Partner_product.id_Partner={count1}";
+                SqlCommand cmd = new SqlCommand(sql, sqlConnection);
+                int count;
+                if (cmd.ExecuteScalar().ToString() != "")
+                    count = Convert.ToInt32(cmd.ExecuteScalar().ToString());
+                else count = 0;
+                if (count < 10000) count = 0;
+                else if (count < 50000) count = 5;
+                else if (count < 300000) count = 10;
+                else if (count >= 300000) count = 15;
+                sqlConnection.Close();
+                return count.ToString();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return "";
+        }
+            private int CountStr()
+        {
+            try
+            {
+                SqlConnection sqlConnection = new SqlConnection(sqlCon);
+                sqlConnection.Open();
+                string sql = "select count(*) from Partners";
+                SqlCommand cmd = new SqlCommand(sql, sqlConnection);
+                int count = Convert.ToInt32(cmd.ExecuteScalar().ToString());
+                sqlConnection.Close();
+                return count;
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return 0;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            page++;
+            if ((page - 1) != 0)
+                skip = 3 * (page-1);
+            Partner();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            page--;
+            if (page!=1)
+                skip = 3 * (page - 1);
+            Partner();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            new History().Show();
+            this.Visible=false;
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            new Insert().Show();
+            this.Visible=false;
+        }
+
+        private void panel3_Click(object sender, EventArgs e)
+        {
+
+            new Update(label25.Text).Show();
+            this.Visible = false;
+        }
+
+        private void panel2_Click(object sender, EventArgs e)
+        {
+            new Update(label16.Text).Show();
+            this.Visible = false;
+        }
+
+        private void panel1_Click(object sender, EventArgs e)
+        {
+            new Update(label3.Text).Show();
+            this.Visible = false;
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            new Calculation().Show();
+            this.Visible = false;
+        }
+
+        private void Partners_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                Application.Exit();
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  private void Insert_Load(object sender, EventArgs e)
+  {
+      try
+      {
+          SqlConnection sqlConnection = new SqlConnection(sqlCon);
+          sqlConnection.Open();
+          string sql = "select TypePartner from Partner_type";
+          SqlCommand cmd = new SqlCommand(sql, sqlConnection);
+          SqlDataReader reader = cmd.ExecuteReader();
+          while (reader.Read())
+          {
+              comboBox1.Items.Add(reader.GetString(0));
+          }
+          sqlConnection.Close();
+
+      }
+      catch (Exception ex)
+      {
+          MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+      }
+  }
+
+  private void button2_Click(object sender, EventArgs e)
+  {
+      try
+      {
+          if (comboBox1.SelectedIndex>=0 && textBox1.Text!="" && textBox2.Text != "" && textBox3.Text != "" && textBox5.Text != "" && maskedTextBox1.Text!="__________")
+          {
+              SqlConnection sqlConnection = new SqlConnection(sqlCon);
+              sqlConnection.Open();
+              string sql = $"select id_TypePartner from Partner_type where TypePartner='{comboBox1.Text}'";
+              SqlCommand cmd = new SqlCommand(sql, sqlConnection);
+              string id=cmd.ExecuteScalar().ToString();
+              sqlConnection.Close();
+              sqlConnection = new SqlConnection(sqlCon);
+              sqlConnection.Open();
+              sql = $"insert into Partners (NamePartner, id_TypePartner, Rating,Addres, Director,Phone, Email) " +
+                  $"values ('{textBox1.Text}', '{id}', '{numericUpDown1.Value}', '{textBox2.Text}', '{textBox3.Text}', '{maskedTextBox1.Text}', '{textBox5.Text}')";
+              cmd = new SqlCommand(sql, sqlConnection);
+              cmd.ExecuteNonQuery();
+              sqlConnection.Close();
+              MessageBox.Show("Партнер добавлен", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+          }
+          else MessageBox.Show("Заполните все поля", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+      }
+      catch (Exception ex)
+      {
+          MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+      }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+private void Update_Load(object sender, EventArgs e)
+{
+    try
+    {
+        SqlConnection sqlConnection = new SqlConnection(sqlCon);
+        sqlConnection.Open();
+        string sql = $"select TypePartner from Partner_type";
+        SqlCommand cmd = new SqlCommand(sql, sqlConnection);
+        SqlDataReader reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+
+            comboBox1.Items.Add(reader.GetString(0));
+        }
+        sqlConnection.Close();
+        sqlConnection = new SqlConnection(sqlCon);
+        sqlConnection.Open();
+        sql = $"select NamePartner, Director, Email, Phone, Addres, ENN, Rating, TypePartner from Partners, Partner_type where Partners.id_TypePartner=Partner_type.id_TypePartner and NamePartner='{name}'";
+        cmd = new SqlCommand(sql, sqlConnection);
+        reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            textBox1.Text = reader.GetString(0);
+            textBox2.Text = reader.GetString(1);
+            textBox3.Text = reader.GetString(2);
+            maskedTextBox1.Text = reader.GetString(3);
+            textBox4.Text = reader.GetString(4);
+            textBox5.Text = reader[5].ToString();
+            numericUpDown1.Value = reader.GetInt32(6);
+            comboBox1.Text = reader.GetString(7);
+        }
+        sqlConnection.Close();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+
+private void button1_Click(object sender, EventArgs e)
+{
+    new Partners().Show();
+    this.Dispose();
+}
+
+private void button2_Click(object sender, EventArgs e)
+{
+    try
+    {
+        if (textBox1.Text!="" && textBox2.Text != "" && textBox3.Text != "" && textBox4.Text != "" && textBox5.Text != "" && maskedTextBox1.Text!="___________")
+        {
+            SqlConnection sqlConnection = new SqlConnection(sqlCon);
+            sqlConnection.Open();
+            string sql = $"select id_TypePartner from Partner_type where TypePartner='{comboBox1.Text}'";
+            SqlCommand cmd = new SqlCommand(sql, sqlConnection);
+            string id = cmd.ExecuteScalar().ToString();
+            sqlConnection.Close();
+            sqlConnection = new SqlConnection(sqlCon);
+            sqlConnection.Open();
+            sql = $"update Partners set NamePartner='{textBox1.Text}', Director='{textBox2.Text}', Email='{textBox3.Text}', " +
+                $"Phone='{maskedTextBox1.Text}', Addres='{textBox4.Text}', ENN='{textBox5.Text}', Rating='{numericUpDown1.Value}', id_TypePartner='{id}' where NamePartner='{name}'";
+            cmd = new SqlCommand(sql, sqlConnection);
+            cmd.ExecuteNonQuery();
+            sqlConnection.Close();
+            MessageBox.Show("Партнер изменен", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        else MessageBox.Show("Заполните все поля", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
