@@ -1,0 +1,83 @@
+using Floors2.Models;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Floors2
+{
+    public partial class CalculateMaterial : Form
+    {
+        demo0506Context context;
+        public CalculateMaterial()
+        {
+            InitializeComponent();
+            context = demo0506Context.Instance();
+            backBtn.BackColor = ColorTranslator.FromHtml("#67BA80");
+            calculateBtn.BackColor = ColorTranslator.FromHtml("#67BA80");
+        }
+
+        public double calculate(int typeId, int materialId, int amount, double param1, double param2)
+        {
+            // Проверка условия неотрицательности параметров
+            if (param1 <= 0 || param2 <= 0)
+            {
+                return -1;
+            }
+            double typeCoefficient, defectRate;
+            // Проверка существования типа продукта
+            if (!context.ProductTypes.Any(t => t.ProductTypeId == typeId))
+            {
+                return -1;
+            }
+            // Проверка существования типа материала
+            if (!context.MaterialTypes.Any(t => t.MaterialTypeId == materialId))
+            {
+                return -1;
+            }
+            
+            typeCoefficient = (double)context.ProductTypes.First(t => t.ProductTypeId == typeId).Coefficient;
+            defectRate = (double)context.MaterialTypes.First(t => t.MaterialTypeId == typeId).MaterialDefectRate;
+            
+            //Количество без учёта брака
+            double baseAmount = typeCoefficient * param1 * param2;
+            //Количество с учётом брака
+            double finalAmount = baseAmount + baseAmount * defectRate * 2;
+            
+            return finalAmount;
+        }
+
+        private void calculateBtn_Click(object sender, EventArgs e)
+        {
+            double param1 = 0, param2 = 0;
+            // Проверка на то, что параметры - числа (нам сказали, что функция должна работать с числами, а не с текстом)
+            if (!Double.TryParse(param1Tb.Text, out param1) || !Double.TryParse(param2Tb.Text, out param2))
+            {
+                MessageBox.Show("Параметры должны быть вещественными числами!", "Ошибка в параметрах", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            int amount = (int)this.amount.Value;
+            int typeId = (int)this.typeId.Value;
+            int materialId = (int)this.materialId.Value;
+
+            double answer = calculate(typeId, materialId, amount, param1, param2);
+            // Вывод ответа в зависимотси от того, что мы получили.
+            if (answer == -1)
+            {
+                MessageBox.Show("Введённые данные привели к исключительной ситуации во время работы функции. Убедитесь в правильности введённых значений.", "Ошибка значений", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            else
+            {
+                MessageBox.Show($"Результат работы функции: {Math.Round(answer, 3)}", "Ответ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+        }
+    }
+}
