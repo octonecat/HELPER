@@ -1,0 +1,48 @@
+
+   private static Partners03Context context;
+
+   public static Partners03Context Instance()
+   {
+       if (context == null)
+           context = new Partners03Context();
+       return context;
+   }
+   protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+=> optionsBuilder.UseSqlServer(@"Data Source=ANJA_COMP;Initial Catalog=Partners03;Integrated Security=True;Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;");
+
+
+
+context = Partners03Context.Instance();
+  partners = context.Partners.Include(p => p.PartnerType)
+                              .Include(p => p.Sales).ToList();///Точно связь должна быть
+ var sales = context.Sales
+     .Include(s => s.Product)  // загружаем связанные продукты
+     .Where(s => s.PartnerId == partner.Id)
+     .ToList();
+long sales = partner.Sales.Sum(p => p.Count);
+if (sales > 300000)
+    discount = 15;
+else if (sales >= 50000)
+    discount = 10;
+else if (sales >= 10000)
+    discount = 15;
+
+
+if (!context.ProductTypes.Any(t => t.ProductTypeId == typeId))
+{
+    return -1;
+}
+// Проверка существования типа материала
+if (!context.MaterialTypes.Any(t => t.MaterialTypeId == materialId))
+{
+    return -1;
+}
+
+typeCoefficient = (double)context.ProductTypes.First(t => t.ProductTypeId == typeId).Coefficient;
+defectRate = (double)context.MaterialTypes.First(t => t.MaterialTypeId == typeId).MaterialDefectRate;
+
+//Количество без учёта брака
+double baseAmount = typeCoefficient * param1 * param2;
+//Количество с учётом брака
+double finalAmount = baseAmount + baseAmount * defectRate * 2;
+            
