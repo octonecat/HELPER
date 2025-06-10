@@ -1,0 +1,3 @@
+double one= typeCoefficient * width * height; - один чистый материал это коэф*ширину*длину
+            double noDeffect = one * Amount; -все материалы без деффекта это один*количество 
+            double result = noDeffect*(1+ defectRate/100); -все с дефектом это безДефекта*(1+дефект/100)
