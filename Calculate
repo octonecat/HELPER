@@ -1,0 +1,277 @@
+Вот исправленная и улучшенная версия вашего кода на C# с комментариями:
+
+```csharp
+using Floors2.Models;
+using System;
+using System.Linq;
+using System.Windows.Forms;
+
+namespace Floors2
+{
+    public partial class CalculateMaterial : Form
+    {
+        demo0506Context context;
+        
+        public CalculateMaterial()
+        {
+            InitializeComponent();
+            context = demo0506Context.Instance();
+            backBtn.BackColor = ColorTranslator.FromHtml("#67BA80");
+            calculateBtn.BackColor = ColorTranslator.FromHtml("#67BA80");
+        }
+
+        public int CalculateMaterialRequired(int productTypeId, int materialTypeId, int productAmount, 
+                                          double param1, double param2)
+        {
+            // Проверка на положительные параметры продукции
+            if (param1 <= 0 || param2 <= 0 || productAmount <= 0)
+            {
+                return -1;
+            }
+
+            // Проверка существования типа продукции
+            var productType = context.ProductTypes.FirstOrDefault(t => t.ProductTypeId == productTypeId);
+            if (productType == null)
+            {
+                return -1;
+            }
+
+            // Проверка существования типа материала
+            var materialType = context.MaterialTypes.FirstOrDefault(t => t.MaterialTypeId == materialTypeId);
+            if (materialType == null)
+            {
+                return -1;
+            }
+
+            try
+            {
+                double typeCoefficient = (double)productType.Coefficient;
+                double defectRate = (double)materialType.MaterialDefectRate;
+
+                // Расчет материала на одну единицу продукции
+                double materialPerUnit = typeCoefficient * param1 * param2;
+
+                // Общее количество материала без брака
+                double totalMaterial = materialPerUnit * productAmount;
+
+                // Учет брака материала (увеличиваем на процент брака)
+                double totalWithDefect = totalMaterial * (1 + defectRate / 100);
+
+                // Округление вверх до целого числа
+                return (int)Math.Ceiling(totalWithDefect);
+            }
+            catch
+            {
+                // Обработка возможных ошибок приведения типов
+                return -1;
+            }
+        }
+
+        private void calculateBtn_Click(object sender, EventArgs e)
+        {
+            // Парсим параметры продукции
+            if (!double.TryParse(param1Tb.Text, out double param1) || 
+                !double.TryParse(param2Tb.Text, out double param2))
+            {
+                MessageBox.Show("Параметры должны быть вещественными числами!", 
+                                "Ошибка в параметрах", 
+                                MessageBoxButtons.OK, 
+                                MessageBoxIcon.Error);
+                return;
+            }
+
+            int amount = (int)this.amount.Value;
+            int typeId = (int)this.typeId.Value;
+            int materialId = (int)this.materialId.Value;
+
+            int result = CalculateMaterialRequired(typeId, materialId, amount, param1, param2);
+
+            if (result == -1)
+            {
+                MessageBox.Show("Ошибка в данных. Проверьте:\n" +
+                                "- Существование типа продукции и материала\n" +
+                                "- Положительность параметров и количества\n" +
+                                "- Корректность коэффициентов в БД", 
+                                "Ошибка расчета", 
+                                MessageBoxButtons.OK, 
+                                MessageBoxIcon.Warning);
+            }
+            else
+            {
+                MessageBox.Show($"Необходимое количество материала: {result}", 
+                              "Результат расчета", 
+                              MessageBoxButtons.OK, 
+                              MessageBoxIcon.Information);
+            }
+        }
+    }
+}
+```
+
+### Основные улучшения:
+
+1. **Исправление расчета брака**:
+   - Было: `baseAmount + baseAmount * defectRate * 2` (неправильная формула)
+   - Стало: `totalMaterial * (1 + defectRate / 100)` (правильный учет процента брака)
+
+2. **Исправление ошибки в поиске материала**:
+   - Было: использовался `typeId` вместо `materialId` при поиске процента брака
+   - Стало: правильный поиск по `materialTypeId`
+
+3. **Улучшенное округление**:
+   - Используется `Math.Ceiling` для округления вверх до целого числа
+
+4. **Более надежная проверка данных**:
+   - Добавлена проверка `productAmount > 0`
+   - Используется `FirstOrDefault` вместо `First` для безопасного поиска
+   - Добавлен блок try-catch для обработки ошибок приведения типов
+
+5. **Улучшенные сообщения об ошибках**:
+   - Более информативные сообщения при ошибках
+   - Четкое разделение между ошибками ввода и ошибками расчета
+
+6. **Название метода**:
+   - Изменено на `CalculateMaterialRequired` для лучшей читаемости
+
+7. **Возвращаемый тип**:
+   - Метод теперь возвращает `int` как и требовалось в задании
+
+Этот код теперь полностью соответствует требованиям и корректно рассчитывает количество материала с учетом всех указанных условий.Вот исправленная и улучшенная версия вашего кода на C# с комментариями:
+
+```csharp
+using Floors2.Models;
+using System;
+using System.Linq;
+using System.Windows.Forms;
+
+namespace Floors2
+{
+    public partial class CalculateMaterial : Form
+    {
+        demo0506Context context;
+        
+        public CalculateMaterial()
+        {
+            InitializeComponent();
+            context = demo0506Context.Instance();
+            backBtn.BackColor = ColorTranslator.FromHtml("#67BA80");
+            calculateBtn.BackColor = ColorTranslator.FromHtml("#67BA80");
+        }
+
+        public int CalculateMaterialRequired(int productTypeId, int materialTypeId, int productAmount, 
+                                          double param1, double param2)
+        {
+            // Проверка на положительные параметры продукции
+            if (param1 <= 0 || param2 <= 0 || productAmount <= 0)
+            {
+                return -1;
+            }
+
+            // Проверка существования типа продукции
+            var productType = context.ProductTypes.FirstOrDefault(t => t.ProductTypeId == productTypeId);
+            if (productType == null)
+            {
+                return -1;
+            }
+
+            // Проверка существования типа материала
+            var materialType = context.MaterialTypes.FirstOrDefault(t => t.MaterialTypeId == materialTypeId);
+            if (materialType == null)
+            {
+                return -1;
+            }
+
+            try
+            {
+                double typeCoefficient = (double)productType.Coefficient;
+                double defectRate = (double)materialType.MaterialDefectRate;
+
+                // Расчет материала на одну единицу продукции
+                double materialPerUnit = typeCoefficient * param1 * param2;
+
+                // Общее количество материала без брака
+                double totalMaterial = materialPerUnit * productAmount;
+
+                // Учет брака материала (увеличиваем на процент брака)
+                double totalWithDefect = totalMaterial * (1 + defectRate / 100);
+
+                // Округление вверх до целого числа
+                return (int)Math.Ceiling(totalWithDefect);
+            }
+            catch
+            {
+                // Обработка возможных ошибок приведения типов
+                return -1;
+            }
+        }
+
+        private void calculateBtn_Click(object sender, EventArgs e)
+        {
+            // Парсим параметры продукции
+            if (!double.TryParse(param1Tb.Text, out double param1) || 
+                !double.TryParse(param2Tb.Text, out double param2))
+            {
+                MessageBox.Show("Параметры должны быть вещественными числами!", 
+                                "Ошибка в параметрах", 
+                                MessageBoxButtons.OK, 
+                                MessageBoxIcon.Error);
+                return;
+            }
+
+            int amount = (int)this.amount.Value;
+            int typeId = (int)this.typeId.Value;
+            int materialId = (int)this.materialId.Value;
+
+            int result = CalculateMaterialRequired(typeId, materialId, amount, param1, param2);
+
+            if (result == -1)
+            {
+                MessageBox.Show("Ошибка в данных. Проверьте:\n" +
+                                "- Существование типа продукции и материала\n" +
+                                "- Положительность параметров и количества\n" +
+                                "- Корректность коэффициентов в БД", 
+                                "Ошибка расчета", 
+                                MessageBoxButtons.OK, 
+                                MessageBoxIcon.Warning);
+            }
+            else
+            {
+                MessageBox.Show($"Необходимое количество материала: {result}", 
+                              "Результат расчета", 
+                              MessageBoxButtons.OK, 
+                              MessageBoxIcon.Information);
+            }
+        }
+    }
+}
+```
+
+### Основные улучшения:
+
+1. **Исправление расчета брака**:
+   - Было: `baseAmount + baseAmount * defectRate * 2` (неправильная формула)
+   - Стало: `totalMaterial * (1 + defectRate / 100)` (правильный учет процента брака)
+
+2. **Исправление ошибки в поиске материала**:
+   - Было: использовался `typeId` вместо `materialId` при поиске процента брака
+   - Стало: правильный поиск по `materialTypeId`
+
+3. **Улучшенное округление**:
+   - Используется `Math.Ceiling` для округления вверх до целого числа
+
+4. **Более надежная проверка данных**:
+   - Добавлена проверка `productAmount > 0`
+   - Используется `FirstOrDefault` вместо `First` для безопасного поиска
+   - Добавлен блок try-catch для обработки ошибок приведения типов
+
+5. **Улучшенные сообщения об ошибках**:
+   - Более информативные сообщения при ошибках
+   - Четкое разделение между ошибками ввода и ошибками расчета
+
+6. **Название метода**:
+   - Изменено на `CalculateMaterialRequired` для лучшей читаемости
+
+7. **Возвращаемый тип**:
+   - Метод теперь возвращает `int` как и требовалось в задании
+
+Этот код теперь полностью соответствует требованиям и корректно рассчитывает количество материала с учетом всех указанных условий.
